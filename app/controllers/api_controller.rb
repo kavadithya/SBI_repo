@@ -1,5 +1,8 @@
 class ApiController < ApplicationController
 
+	def home
+	end
+
     def new_entry
     	details = get_params
     	city = City.find_by_name(details['city'])

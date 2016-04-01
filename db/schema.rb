@@ -19,6 +19,8 @@ ActiveRecord::Schema.define(version: 20160401024030) do
     t.datetime "updated_at", null: false
   end
 
+  add_index "banks", ["name"], name: "index_banks_on_name", unique: true
+
   create_table "banks_cities", id: false, force: :cascade do |t|
     t.integer "bank_id"
     t.integer "city_id"
@@ -47,5 +49,7 @@ ActiveRecord::Schema.define(version: 20160401024030) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
   end
+
+  add_index "cities", ["name"], name: "index_cities_on_name", unique: true
 
 end

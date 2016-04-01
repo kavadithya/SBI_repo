@@ -1,10 +1,13 @@
 Rails.application.routes.draw do
 
+  root to: "api#home"
+
   resources :api do 
     collection do 
       post 'new_entry'
       post 'details_ifsc'
       post 'details_bank_city'
+      get 'home'
     end
   end
 
