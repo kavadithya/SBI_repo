@@ -8,18 +8,45 @@ def post_call(url, data, session = requests, use_json = True):
 		request = session.post(url, data = data)
 	return request
 
-prod_url_1 = "https://cryptic-waters-12950.herokuapp.com/api/details_ifsc"
-
-url_1 = "http://localhost/api/details_ifsc"
-data_1 = {'ifsc': 'ALLA0210054'}
-
+url_1 = "https://cryptic-waters-12950.herokuapp.com/api/details_ifsc"
 url_2 = "http://cryptic-waters-12950.herokuapp.com/api/details_bank_city"
-data_2 = {'bank': 'ABHYUDAYA COOPERATIVE BANK LIMITED', 'city': 'MUMBAI'}
 
-# req = post_call(prod_url_1, data_1)
-req = post_call(url_2, data_2)
-print req.status_code
 
-print req.content
+def check_ifsc():
+	data_1 = {'ifsc': 'ALLA0210054'}
+	req = post_call(url_1, data_1)
+	assert req.status_code == 200, True
+	print req.content
+
+
+def check_details():
+	data = {'bank': 'ABHYUDAYA COOPERATIVE BANK LIMITED', 'city': 'MUMBAI'}
+	req = post_call(url_2, data)
+	assert req.status_code == 200, True
+	print req.content
+
+def check_unavailable_input():
+	data = {'ifsc': 'asdf'}
+	req = post_call(url_1, data)
+	assert req.status_code == 403, True
+	print req.content
+
+	data = {'bank': 'bla', 'city': 'city'}
+	req = post_call(url_2, data)
+	assert req.status_code == 403, True
+	print req.content
+
+def check_bad_input():
+	data = {'bla': 'bla'}
+	req = post_call(url_1, data)
+	assert req.status_code == 403, True
+	print req.content
+
+	data = {}
+	req = post_call(url_2, data)
+	assert req.status_code == 403, True
+	print req.content
+
+check_bad_input()
 
 
