@@ -26,18 +26,28 @@ class ApiController < ApplicationController
 
     def details_ifsc
     	branch = Branch.find_by_ifsc(params[:ifsc])
-    	render json: get_branch_details(branch), :status => 200
+    	if branch.nil?
+    		render json: {message: 'Branch not found'}, :status => 403
+    	else
+    		render json: get_branch_details(branch), :status => 200
+    	end
     end
 
     def details_bank_city
     	bank = Bank.find_by_name(params[:bank])
     	city = City.find_by_name(params[:city])
-    	branches = city.branch.where(:bank_id => bank.id)
-    	list_branches = []
-    	branches.each do |br|
-    		list_branches.push(get_branch_details(br))
-    	end
-    	render json: {'list_branches': list_branches}, :status => 200
+    	if bank.nil? or city.nil? 
+    		render json: {message: 'Branch not found'}, :status => 403
+    	else
+	    	branches = city.branch.where(:bank_id => bank.id)
+	    	list_branches = []
+	    	branches.each do |br|
+	    		if not branch.nil?
+	    			list_branches.push(get_branch_details(br))
+	    		end
+	    	end
+	    	render json: {'list_branches': list_branches}, :status => 200
+	    end
     end
 
 	private
