@@ -2,6 +2,10 @@ import requests, json
 import time
 import csv
 
+import Queue
+import threading
+
+
 url = "https://cryptic-waters-12950.herokuapp.com/api/new_entry"
 f = open('bank_branches.csv', 'rb')
 
@@ -22,22 +26,52 @@ def make_request(list):
 		return True
 	return False
 
-count = 0
-try:
-	reader = csv.reader(f)
-	for row in reader:
-		print count
+def threaded(function):
+    def wrapper(*args, **kwargs):
+        threading.Thread(target=function, args=args, kwargs=kwargs).start()
+    return wrapper
+
+class requestMaker():
+	def __init__(self, base_url, number_threads = 1):
+		self.base_url = base_url
+		self.number_threads = number_threads
+		self.rows_pending = Queue.Queue()
+		self.rows_current = Queue.Queue(self.number_threads)
+		self.load()
+
+	def load(self):
+		count = 0
 		try:
-			make_request(row)
-		except Exception as e:
-			print "%s failed due to %s"%(row, e)
-		count += 1
-finally:
-	f.close()      
+			reader = csv.reader(f)
+			for row in reader:
+				print count
+				try:
+					if count > -1: 
+						self.rows_pending.put(row)
+				except Exception as e:
+					print "%s failed due to %s"%(row, e)
+				count += 1
+		finally:
+			f.close()      
 
 
+	@threaded
+	def _makeRequest(self, row):
+		print "Thread"
+		make_request(row)
+		self.rows_current.get()
 
-# data = {'ifsc': 'iasdf2', 'bank_id': 60, 'branch': 'branch', 'address': 'address',\
-# 		'city': 'city', 'district': 'district', 'state': 'state', 'bank_name': 'ICICI'}
+	@threaded
+	def _masterWorker(self):
+		while True:
+			try:
+				row = self.rows_pending.get(False)
+			except Exception as e:
+				print "No more URLS to be done"
+				break
+			self.rows_current.put(row)
+			self._makeRequest(row)
 
 
+m = requestMaker(url, 5)
+m._masterWorker()
