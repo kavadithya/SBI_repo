@@ -2,7 +2,7 @@ import requests, json
 import time
 import csv
 
-url = "http://localhost/api/new_entry"
+url = "https://cryptic-waters-12950.herokuapp.com/api/new_entry"
 f = open('bank_branches.csv', 'rb')
 
 def post_call(url, data, session = requests, use_json = True):
@@ -22,14 +22,16 @@ def make_request(list):
 		return True
 	return False
 
-
+count = 0
 try:
-	first_line = True
 	reader = csv.reader(f)
 	for row in reader:
-		if not first_line:
+		print count
+		try:
 			make_request(row)
-		first_line = False
+		except Exception as e:
+			print "%s failed due to %s"%(row, e)
+		count += 1
 finally:
 	f.close()      
 

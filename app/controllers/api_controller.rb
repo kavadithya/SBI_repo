@@ -45,7 +45,7 @@ class ApiController < ApplicationController
 	    	branches = city.branch.where(:bank_id => bank.id)
 	    	list_branches = []
 	    	branches.each do |br|
-	    		if not branch.nil?
+	    		if not br.nil?
 	    			list_branches.push(get_branch_details(br))
 	    		end
 	    	end
