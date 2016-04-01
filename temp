@@ -1,0 +1,50 @@
+class ApisController < ApplicationController
+    # before_filter :is_allowed, :only => [:apiAdd, :apiMultiply]
+
+    def new_entry
+    	details = get_params
+    	city = City.find_by_name(details['city'])
+    	bank = Bank.find_by_name(details['bank_name'])
+    	if city.nil? and bank.nil?
+    		city = City.new({name: details['city'], district: details['district'], state: details['state']})
+    		city.save
+    		bank = city.bank.new({name: details['bank_name']})
+    		bank.save
+    	elsif bank.nil?
+			bank = city.bank.new({name: details['bank_name']})
+			bank.save
+		elsif city.nil? 
+			city = bank.city.new({name: details['city'], district: details['district'], state: details['state']})
+			city.save
+		end
+
+		branch = city.branch.new({ifsc: details['ifsc'], 'b_id': details['bank_id'], 'branch': details['branch'], 'address': details['address']})
+		if	branch.save
+			render json:{message: 'success'}, :status => 200
+		end
+    end
+
+    def details_ifsc
+
+    end
+
+    def details_bank_city
+
+    end
+
+	private
+
+		def get_params
+			return {'ifsc' => params['ifsc'], 
+					'bank_id' => params['bank_id'], 
+					'branch' => params['branch'], 
+					'address' => params['address'],
+					'city' => params['city'],
+					'district' => params['district'],
+					'state' => params['state'],
+					'bank_name' => params['bank_name']
+				}
+		end 
+
+
+end
