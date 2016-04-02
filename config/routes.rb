@@ -4,9 +4,8 @@ Rails.application.routes.draw do
 
   resources :api do 
     collection do 
+      get 'get_branches'
       post 'new_entry'
-      post 'details_ifsc'
-      post 'details_bank_city'
       get 'home'
     end
   end

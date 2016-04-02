@@ -1,52 +1,43 @@
 import requests, json 
 
-def post_call(url, data, session = requests, use_json = True):
-	headers = {'Content-Type': 'application/json'}
-	if use_json:
-		request = session.post(url, data = json.dumps(data), headers = headers)
-	else:
-		request = session.post(url, data = data)
+BASE_URL = "http://localhost"
+#BASE_URL = "https://cryptic-waters-12950.herokuapp.com"
+
+def get_call(url):
+	request = requests.get(url)
 	return request
 
-url_1 = "https://cryptic-waters-12950.herokuapp.com/api/details_ifsc"
-url_2 = "http://cryptic-waters-12950.herokuapp.com/api/details_bank_city"
-
-
 def check_ifsc():
-	data_1 = {'ifsc': 'ALLA0210054'}
-	req = post_call(url_1, data_1)
+	url = "%s/api/get_branches?ifsc=ABHY0065001"%(BASE_URL)
+	req = get_call(url)
 	assert req.status_code == 200, True
 	print req.content
 
 
 def check_details():
-	data = {'bank': 'ABHYUDAYA COOPERATIVE BANK LIMITED', 'city': 'MUMBAI'}
-	req = post_call(url_2, data)
+	url = "%s/api/get_branches?bank_name=ABHYUDAYA%%20COOPERATIVE%%20BANK%%20LIMITED&city=MUMBAI"%(BASE_URL)
+	req = get_call(url)
 	assert req.status_code == 200, True
 	print req.content
 
 def check_unavailable_input():
-	data = {'ifsc': 'asdf'}
-	req = post_call(url_1, data)
-	assert req.status_code == 403, True
+	url = "%s/api/get_branches?ifsc=1234"%(BASE_URL)
+	req = get_call(url)
+	assert req.status_code == 404, True
 	print req.content
 
-	data = {'bank': 'bla', 'city': 'city'}
-	req = post_call(url_2, data)
-	assert req.status_code == 403, True
+	url = "%s/api/get_branches?bank_name=ABHYUDAYA%%20COOPERATIVE%%20BANK%%20LIMITED&city=bla_bla"%(BASE_URL)
+	req = get_call(url)
+	assert req.status_code == 404, True
 	print req.content
 
 def check_bad_input():
-	data = {'bla': 'bla'}
-	req = post_call(url_1, data)
-	assert req.status_code == 403, True
+	url = "%s/api/get_branches?abc=123"%(BASE_URL)
+	req = get_call(url)
+	assert req.status_code == 400, True
 	print req.content
 
-	data = {}
-	req = post_call(url_2, data)
-	assert req.status_code == 403, True
-	print req.content
-
+check_ifsc()
+check_details()
+check_unavailable_input()
 check_bad_input()
-
-

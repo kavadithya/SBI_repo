@@ -3,6 +3,18 @@ class ApiController < ApplicationController
 	def home
 	end
 
+	def get_branches
+		details = get_params
+		if !details['ifsc'].nil?
+			message, status = details_ifsc(details)
+		elsif !(details['city'].nil? and details['bank'].nil?)
+			message, status = details_bank_city(details)
+		else
+			message, status = {message: "Incorrect or insufficient parameters"}, 400
+		end
+		render json: message, :status => status
+	end
+
     def new_entry
     	details = get_params
     	city = City.find_by_name(details['city'])
@@ -27,33 +39,33 @@ class ApiController < ApplicationController
 		end
     end
 
-    def details_ifsc
-    	branch = Branch.find_by_ifsc(params[:ifsc])
-    	if branch.nil?
-    		render json: {message: 'Branch not found'}, :status => 403
-    	else
-    		render json: get_branch_details(branch), :status => 200
-    	end
-    end
-
-    def details_bank_city
-    	bank = Bank.find_by_name(params[:bank])
-    	city = City.find_by_name(params[:city])
-    	if bank.nil? or city.nil? 
-    		render json: {message: 'Branch not found'}, :status => 403
-    	else
-	    	branches = city.branch.where(:bank_id => bank.id)
-	    	list_branches = []
-	    	branches.each do |br|
-	    		if not br.nil?
-	    			list_branches.push(get_branch_details(br))
-	    		end
-	    	end
-	    	render json: {'list_branches': list_branches}, :status => 200
-	    end
-    end
-
 	private
+
+	    def details_ifsc(details)
+	    	branch = Branch.find_by_ifsc(details['ifsc'])
+	    	if branch.nil?
+	    		return  {message: 'Branch not found'}, 404
+	    	else
+	    		return get_branch_details(branch), 200
+	    	end
+	    end
+
+	    def details_bank_city(details)
+	    	bank = Bank.find_by_name(details['bank_name'])
+	    	city = City.find_by_name(details['city'])
+	    	if bank.nil? or city.nil? 
+	    		return {message: 'Branch not found'}, 404
+	    	else
+		    	branches = city.branch.where(:bank_id => bank.id)
+		    	list_branches = []
+		    	branches.each do |br|
+		    		if not br.nil?
+		    			list_branches.push(get_branch_details(br))
+		    		end
+		    	end
+		    	return {'list_branches': list_branches}, 200
+		    end
+	    end
 
 		def get_params
 			return {'ifsc' => params['ifsc'], 

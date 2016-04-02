@@ -6,7 +6,8 @@ import Queue
 import threading
 
 
-url = "https://cryptic-waters-12950.herokuapp.com/api/new_entry"
+# url = "https://cryptic-waters-12950.herokuapp.com/api/new_entry"
+url = "http://localhost/api/new_entry"
 f = open('bank_branches.csv', 'rb')
 
 def post_call(url, data, session = requests, use_json = True):
@@ -73,5 +74,5 @@ class requestMaker():
 			self._makeRequest(row)
 
 
-m = requestMaker(url, 5)
+m = requestMaker(url, 4)
 m._masterWorker()
