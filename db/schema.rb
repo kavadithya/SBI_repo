@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20160401024030) do
+ActiveRecord::Schema.define(version: 20160403074044) do
 
   create_table "banks", force: :cascade do |t|
     t.string   "name"
@@ -22,8 +22,8 @@ ActiveRecord::Schema.define(version: 20160401024030) do
   add_index "banks", ["name"], name: "index_banks_on_name", unique: true
 
   create_table "banks_cities", id: false, force: :cascade do |t|
-    t.integer "bank_id"
     t.integer "city_id"
+    t.integer "bank_id"
   end
 
   add_index "banks_cities", ["bank_id"], name: "index_banks_cities_on_bank_id"
@@ -40,6 +40,7 @@ ActiveRecord::Schema.define(version: 20160401024030) do
     t.integer  "bank_id"
   end
 
+  add_index "branches", ["bank_id"], name: "index_branches_on_bank_id"
   add_index "branches", ["ifsc"], name: "index_branches_on_ifsc", unique: true
 
   create_table "cities", force: :cascade do |t|

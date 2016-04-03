@@ -22,17 +22,27 @@ class ApiController < ApplicationController
     	if city.nil? and bank.nil?
     		city = City.new({name: details['city'], district: details['district'], state: details['state']})
     		city.save
-    		bank = city.bank.new({name: details['bank_name']})
+    		bank = city.banks.new({name: details['bank_name']})
+    		bank.cities.push(city)
     		bank.save
     	elsif bank.nil?
-			bank = city.bank.new({name: details['bank_name']})
+			bank = city.banks.new({name: details['bank_name']})
+			bank.cities.push(city)
 			bank.save
 		elsif city.nil? 
-			city = bank.city.new({name: details['city'], district: details['district'], state: details['state']})
+			city = bank.cities.new({name: details['city'], district: details['district'], state: details['state']})
+			city.banks.push(bank)
 			city.save
+		else
+			if !city.banks.include? (bank)
+				city.banks.push(bank)
+			end
+			if !bank.cities.include? (city)
+				bank.cities.push(city)
+			end
 		end
 
-		branch = city.branch.new({ifsc: details['ifsc'], 'given_bank_id': details['bank_id'], 'branch': details['branch'], 'address': details['address']})
+		branch = city.branches.new({ifsc: details['ifsc'], 'given_bank_id': details['bank_id'], 'branch': details['branch'], 'address': details['address']})
 		branch.bank_id = bank.id
 		if	branch.save
 			render json:{message: 'success'}, :status => 200
@@ -52,15 +62,17 @@ class ApiController < ApplicationController
 
 	    def details_bank_city(details)
 	    	bank = Bank.find_by_name(details['bank_name'])
-	    	city = City.find_by_name(details['city'])
+	    	if !bank.nil?
+	    		city = bank.cities.find_by_name(details['city'])
+	    	end
 	    	if bank.nil? or city.nil? 
 	    		return {message: 'Branch not found'}, 404
 	    	else
-		    	branches = city.branch.where(:bank_id => bank.id)
+		    	branches = city.branches.where(:bank_id => bank.id)
 		    	list_branches = []
 		    	branches.each do |br|
 		    		if not br.nil?
-		    			list_branches.push(get_branch_details(br))
+		    			list_branches.push(get_branch_details(br, bank, city))
 		    		end
 		    	end
 		    	return {'list_branches': list_branches}, 200
@@ -79,9 +91,13 @@ class ApiController < ApplicationController
 				}
 		end
 
-		def get_branch_details(branch)
-	    	bank = Bank.find(branch.bank_id)
-	    	city = City.find(branch.city_id)
+		def get_branch_details(branch, bank = nil, city = nil)
+			if bank.nil?
+	    		bank = Bank.find(branch.bank_id)
+	    	end
+	    	if city.nil? 
+	    		city = City.find(branch.city_id)
+	    	end
 	    	return {
 	    		'ifsc': branch.ifsc, 
 	    		'bank_id': branch.given_bank_id, 
