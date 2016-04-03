@@ -6,9 +6,9 @@ class ApiController < ApplicationController
 	def get_branches
 		details = get_params
 		if !details['ifsc'].nil?
-			message, status = details_ifsc(details)
+			message, status = Rails.cache.fetch(['ifsc', details['ifsc']], :expires_in => 24.hours) { details_ifsc(details) }
 		elsif !(details['city'].nil? and details['bank'].nil?)
-			message, status = details_bank_city(details)
+			message, status = Rails.cache.fetch(['bank_city', details['bank'], details['city']], :expires_in => 24.hours) { details_bank_city(details) }
 		else
 			message, status = {message: "Incorrect or insufficient parameters"}, 400
 		end
@@ -52,6 +52,7 @@ class ApiController < ApplicationController
 	private
 
 	    def details_ifsc(details)
+	    	### Caching here is redundant - done at the previous level
 	    	branch = Branch.find_by_ifsc(details['ifsc'])
 	    	if branch.nil?
 	    		return  {message: 'Branch not found'}, 404
@@ -61,13 +62,14 @@ class ApiController < ApplicationController
 	    end
 
 	    def details_bank_city(details)
-	    	bank = Bank.find_by_name(details['bank_name'])
+	    	bank = Rails.cache.fetch(details['bank_name'], :expires_in => 24.hours) { Bank.find_by_name(details['bank_name']) }
 	    	if !bank.nil?
-	    		city = bank.cities.find_by_name(details['city'])
+	    		city = Rails.cache.fetch([details['bank_name'], details['city']], :expires_in => 24.hours) { bank.cities.find_by_name(details['city']) }
 	    	end
 	    	if bank.nil? or city.nil? 
 	    		return {message: 'Branch not found'}, 404
 	    	else
+	    		### Caching here is redundant - done at the previous level
 		    	branches = city.branches.where(:bank_id => bank.id)
 		    	list_branches = []
 		    	branches.each do |br|
@@ -93,10 +95,10 @@ class ApiController < ApplicationController
 
 		def get_branch_details(branch, bank = nil, city = nil)
 			if bank.nil?
-	    		bank = Bank.find(branch.bank_id)
+	    		bank = Rails.cache.fetch(['bank_id', branch.bank_id], :expires_in => 24.hours) { Bank.find(branch.bank_id) }
 	    	end
 	    	if city.nil? 
-	    		city = City.find(branch.city_id)
+	    		city = Rails.cache.fetch(['city_id', branch.city_id], :expires_in => 24.hours) { City.find(branch.city_id) }
 	    	end
 	    	return {
 	    		'ifsc': branch.ifsc, 
